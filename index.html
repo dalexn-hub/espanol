@@ -75,11 +75,6 @@ input#answer:focus { border-color: var(--accent); }
 .feedback .you { display: block; font-weight: 400; font-size: 16px; color: var(--muted); margin-top: 2px; }
 .example { text-align: center; font: italic 19px/1.35 ui-serif, "New York", Georgia, serif; color: var(--muted); }
 
-/* испанские буквы над клавиатурой */
-.accents { display: flex; gap: 5px; margin-top: 8px; }
-.accents button { flex: 1; height: 42px; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
-  font: 500 20px/1 ui-serif, Georgia, serif; }
-.accents button:active { background: var(--soft); }
 
 /* нижние кнопки */
 .actions { display: flex; gap: 8px; margin-top: 8px; }
@@ -138,7 +133,6 @@ input#answer:focus { border-color: var(--accent); }
       <div class="example" id="example"></div>
     </div>
   </div>
-  <div class="accents hidden" id="accents"></div>
   <div class="actions" id="actions">
     <button class="btn side" id="btnIdk">Не знаю</button>
     <button class="btn side hidden" id="btnOk">Я ответил правильно</button>
@@ -169,7 +163,7 @@ input#answer:focus { border-color: var(--accent); }
     <div class="row"><div><h3 style="margin:0">Озвучка</h3><div class="note">Кнопка 🔊 у испанского слова</div></div>
       <button class="switch" id="ttsSwitch" aria-label="Озвучка"></button></div>
   </div>
-  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 1</p>
+  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 2</p>
 </div>
 
 <script>
@@ -180,7 +174,6 @@ const NEW_PER_DAY = 10;
 const MAX_SESSION = 60;
 const INTERVALS = {1: 1, 2: 2, 3: 4, 4: 8, 5: 16};
 const MAX_BOX = 5;
-const ACCENTS = ["á", "é", "í", "ó", "ú", "ñ", "ü", "¿", "¡"];
 
 // Стартовый прогресс (перенесён из progress.json). Загружается один раз, если на телефоне ещё пусто.
 const SEED_PROGRESS = {"dejar":{"box":1,"correct":4,"wrong":4,"last_seen":"2026-09-17","next_due":"2026-09-18"},"tener":{"box":5,"correct":6,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"sentir":{"box":4,"correct":7,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-25"},"pedir":{"box":3,"correct":5,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-21"},"aceptar":{"box":1,"correct":6,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-18"},"utilizar":{"box":2,"correct":5,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"escribir":{"box":5,"correct":6,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"correr":{"box":4,"correct":6,"wrong":1,"last_seen":"2026-09-15","next_due":"2026-09-23"},"lograr":{"box":2,"correct":4,"wrong":4,"last_seen":"2026-09-17","next_due":"2026-09-19"},"mirar":{"box":2,"correct":4,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"decir":{"box":3,"correct":5,"wrong":2,"last_seen":"2026-09-15","next_due":"2026-09-19"},"levantar":{"box":2,"correct":5,"wrong":1,"last_seen":"2026-09-01","next_due":"2026-09-03"},"tocar":{"box":5,"correct":5,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"trabajar":{"box":5,"correct":5,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"contar":{"box":5,"correct":5,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"acabar":{"box":2,"correct":4,"wrong":3,"last_seen":"2026-09-17","next_due":"2026-09-19"},"comenzar":{"box":2,"correct":4,"wrong":4,"last_seen":"2026-09-17","next_due":"2026-09-19"},"terminar":{"box":1,"correct":3,"wrong":1,"last_seen":"2026-09-08","next_due":"2026-09-09"},"estudiar":{"box":4,"correct":4,"wrong":0,"last_seen":"2026-09-08","next_due":"2026-09-16"},"alcanzar":{"box":1,"correct":3,"wrong":4,"last_seen":"2026-09-17","next_due":"2026-09-18"},"convertir":{"box":1,"correct":4,"wrong":3,"last_seen":"2026-09-17","next_due":"2026-09-18"},"nacer":{"box":3,"correct":6,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-21"},"gustar":{"box":5,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"llamar":{"box":5,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"necesitar":{"box":1,"correct":2,"wrong":1,"last_seen":"2026-09-08","next_due":"2026-09-09"},"escuchar":{"box":1,"correct":3,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"ser":{"box":5,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"presentar":{"box":1,"correct":3,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"llegar":{"box":1,"correct":4,"wrong":3,"last_seen":"2026-09-17","next_due":"2026-09-18"},"encontrar":{"box":1,"correct":3,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-18"},"cumplir":{"box":2,"correct":3,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"oír":{"box":1,"correct":3,"wrong":2,"last_seen":"2026-09-08","next_due":"2026-09-09"},"el año":{"box":5,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"hasta":{"box":2,"correct":4,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"débil":{"box":2,"correct":4,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"la escuela estatal":{"box":5,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-10-03"},"el alojamiento":{"box":4,"correct":5,"wrong":1,"last_seen":"2026-09-15","next_due":"2026-09-23"},"por si acaso / por si las moscas":{"box":1,"correct":3,"wrong":2,"last_seen":"2026-09-08","next_due":"2026-09-09"},"creer en":{"box":3,"correct":4,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-21"},"soso":{"box":3,"correct":5,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-21"},"el pavo":{"box":4,"correct":3,"wrong":0,"last_seen":"2026-09-08","next_due":"2026-09-16"},"montar en barco":{"box":2,"correct":4,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"la Antártida":{"box":3,"correct":3,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-21"},"crecer":{"box":1,"correct":2,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-18"},"la boca":{"box":4,"correct":4,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-25"},"alto":{"box":3,"correct":2,"wrong":0,"last_seen":"2026-09-08","next_due":"2026-09-12"},"la explotación":{"box":3,"correct":3,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-21"},"el bosque":{"box":1,"correct":2,"wrong":1,"last_seen":"2026-09-08","next_due":"2026-09-09"},"adecuado":{"box":2,"correct":3,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-19"},"la única cosa difícil":{"box":1,"correct":3,"wrong":2,"last_seen":"2026-09-17","next_due":"2026-09-18"},"seco":{"box":4,"correct":3,"wrong":0,"last_seen":"2026-09-15","next_due":"2026-09-23"},"lastimarse":{"box":1,"correct":1,"wrong":2,"last_seen":"2026-09-08","next_due":"2026-09-09"},"mantener":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-15","next_due":"2026-09-17"},"la fresa salvaje":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-19"},"últimamente":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-19"},"las extraescolares":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"las pasas":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-19"},"la pelota":{"box":1,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"ir a casa de alguien":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-01","next_due":"2026-09-03"},"ahora mismo":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-19"},"vestirse":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"el pelo":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-01","next_due":"2026-09-03"},"el curso":{"box":3,"correct":2,"wrong":0,"last_seen":"2026-09-15","next_due":"2026-09-19"},"ser fan de":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"la mayor parte":{"box":2,"correct":2,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-19"},"el recibidor":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"la nariz tapada":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"creer":{"box":3,"correct":2,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-21"},"traer":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-15","next_due":"2026-09-16"},"partir":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"acumularse":{"box":1,"correct":1,"wrong":1,"last_seen":"2026-09-17","next_due":"2026-09-18"},"preocuparse por algo":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"conocer el mundo":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"comer fuera (de casa)":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"los juegos de mesa":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"barato":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"enero":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"el trozo":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"},"cerca de":{"box":2,"correct":1,"wrong":0,"last_seen":"2026-09-17","next_due":"2026-09-19"}};
@@ -302,7 +295,7 @@ const $ = id => document.getElementById(id);
 const el = {
   app: $("app"), counter: $("counter"), score: $("score"), barWrap: $("barWrap"), bar: $("bar"),
   card: $("card"), tag: $("tag"), prompt: $("prompt"), sayPrompt: $("sayPrompt"), choices: $("choices"),
-  answer: $("answer"), feedback: $("feedback"), example: $("example"), accents: $("accents"),
+  answer: $("answer"), feedback: $("feedback"), example: $("example"),
   actions: $("actions"), btnIdk: $("btnIdk"), btnOk: $("btnOk"), btnMain: $("btnMain"), panel: $("panel"),
 };
 
@@ -316,7 +309,6 @@ function updateHeader() {
 function showCardView(on) {
   for (const n of [el.card, el.actions, el.barWrap]) n.classList.toggle("hidden", !on);
   el.panel.classList.toggle("hidden", on);
-  if (!on) el.accents.classList.add("hidden");
 }
 
 function nextCard() {
@@ -351,7 +343,6 @@ function nextCard() {
     });
     el.choices.classList.remove("hidden");
     el.answer.classList.add("hidden"); el.answer.blur();
-    el.accents.classList.add("hidden");
     el.btnMain.disabled = true;
   } else {
     el.tag.textContent = `коробка ${box} · напишите по-испански` + extra;
@@ -360,7 +351,6 @@ function nextCard() {
     el.choices.classList.add("hidden"); el.choices.innerHTML = "";
     el.answer.value = "";
     el.answer.classList.remove("hidden");
-    el.accents.classList.remove("hidden");
     el.btnMain.disabled = false;
     el.answer.focus();
   }
@@ -389,7 +379,6 @@ function grade(correct, typed, allowOverride) {
   el.btnOk.classList.toggle("hidden", correct || !allowOverride);
   el.example.textContent = ex || "";
   el.btnIdk.classList.add("hidden");
-  el.accents.classList.add("hidden");
   el.btnMain.textContent = "Дальше"; el.btnMain.disabled = false;
 }
 function showFeedback(correct, typed) {
@@ -509,12 +498,19 @@ function pickVoice() {
   esVoice = vs.find(v => v.lang === "es-ES" || v.lang === "es_ES") || vs.find(v => /^es/i.test(v.lang)) || null;
 }
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+let lastUtter = null;   // держим ссылку: иначе iOS иногда обрывает озвучку
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
+  const synth = speechSynthesis;
+  if (!esVoice) pickVoice();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = "es-ES"; u.rate = 0.9; if (esVoice) u.voice = esVoice;
-  speechSynthesis.speak(u);
+  u.lang = esVoice ? esVoice.lang.replace("_", "-") : "es-ES";
+  u.rate = 0.9;
+  if (esVoice) u.voice = esVoice;
+  lastUtter = u;
+  // На iOS cancel() прямо перед speak() «съедает» фразу — отменяем, только если что-то звучит.
+  if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(() => synth.speak(u), 120); }
+  else { synth.resume(); synth.speak(u); }
 }
 
 // ================= Настройки =================
@@ -589,17 +585,6 @@ el.answer.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventD
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && answered && document.activeElement !== el.answer && $("settings").classList.contains("hidden")) { e.preventDefault(); commit(); }
 });
-for (const ch of ACCENTS) {
-  const b = document.createElement("button"); b.textContent = ch; b.type = "button";
-  b.addEventListener("pointerdown", e => e.preventDefault());
-  b.onclick = () => {
-    const inp = el.answer, s = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? s;
-    inp.value = inp.value.slice(0, s) + ch + inp.value.slice(en);
-    inp.setSelectionRange(s + ch.length, s + ch.length);
-    inp.focus();
-  };
-  el.accents.appendChild(b);
-}
 // Подгоняем экран под видимую область, чтобы кнопки были прямо над клавиатурой.
 function fitViewport() {
   const vv = window.visualViewport;
