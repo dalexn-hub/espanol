@@ -163,7 +163,7 @@ input#answer:focus { border-color: var(--accent); }
     <div class="row"><div><h3 style="margin:0">Озвучка</h3><div class="note">Кнопка 🔊 у испанского слова</div></div>
       <button class="switch" id="ttsSwitch" aria-label="Озвучка"></button></div>
   </div>
-  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 2</p>
+  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 3</p>
 </div>
 
 <script>
@@ -410,8 +410,23 @@ function commit() {
   done += 1; shown.add(es);
   if (lastCorrect) { right += 1; mistakes = mistakes.filter(m => m[0] !== es); }
   else if (!mistakes.some(m => m[0] === es)) mistakes.push(current);
+  saveDay();
   if (sessionDay !== today()) return startDay();   // наступил новый день
   nextCard();
+}
+
+// ================= Статистика дня (не сбрасывается при закрытии) =================
+function saveDay() {
+  store.set("day", { d: sessionDay, done, right, mistakes: mistakes.map(m => m[0]), shown: [...shown] });
+}
+function restoreDay() {
+  done = right = 0; mistakes = []; shown = new Set();
+  const v = store.get("day", null);
+  if (!v || v.d !== today()) return;
+  const byEs = new Map(rows.map(r => [r[0], r]));
+  done = v.done || 0; right = v.right || 0;
+  shown = new Set(v.shown || []);
+  mistakes = (v.mistakes || []).map(es => byEs.get(es)).filter(Boolean);
 }
 
 // ================= Пулы и экран между раундами =================
@@ -430,7 +445,9 @@ function roundOver(firstEmpty) {
   showCardView(false); el.answer.blur();
   el.counter.innerHTML = ""; el.score.textContent = "";
   const pct = done ? Math.round(right / done * 100) : 0;
-  const head = firstEmpty ? "На сегодня всё повторено" : `Раунд закончен: ${right} из ${done} верно (${pct}%)`;
+  const stat = `${right} из ${done} верно (${pct}%)`;
+  const head = firstEmpty ? (done ? `На сегодня всё повторено. Сегодня: ${stat}` : "На сегодня всё повторено")
+                          : `Раунд закончен. Сегодня: ${stat}`;
   const mist = mistakes.slice(), nw = poolNew(), ahead = poolAhead();
   const any = mist.length || nw.length || ahead.length;
   el.panel.innerHTML = "";
@@ -440,7 +457,7 @@ function roundOver(firstEmpty) {
   el.panel.appendChild(p);
   let first = true;
   const cls = () => { const c = first ? "main" : "side"; first = false; return c; };
-  if (mist.length) panelButton(`Ошибки этой сессии (${mist.length})`, cls(), () => startRound(mist, true));
+  if (mist.length) panelButton(`Ошибки за сегодня (${mist.length})`, cls(), () => startRound(mist, true));
   if (nw.length) panelButton(`Новые слова (${nw.length})`, cls(), () => startRound(nw, false));
   if (ahead.length) panelButton(`Досрочный повтор (${ahead.length})`, cls(), () => startRound(ahead, true));
   panelButton("Закончить", "side", finish);
@@ -479,8 +496,9 @@ async function startDay() {
   }
   prog = loadProgress();
   sessionDay = today();
-  queue = buildSession(); total = queue.length; done = right = 0;
-  extraRound = false; mistakes = []; shown = new Set();
+  restoreDay();
+  queue = buildSession(); total = done + queue.length;
+  extraRound = false;
   if (!wordsFresh) toast("Нет интернета — словарь из сохранённой копии");
   if (!queue.length) return roundOver(true);
   showCardView(true);
@@ -527,7 +545,7 @@ function plural(n, a, b, c) { const m10 = n % 10, m100 = n % 100; return m10 ===
 function renderSettings() {
   $("dictInfo").textContent = `${rows.length} ${plural(rows.length, "слово", "слова", "слов")} · обновлён ${fmtTime(store.get("words_time", 0))}`;
   const n = Object.keys(prog).length;
-  $("progInfo").textContent = `Изучается ${n} ${plural(n, "слово", "слова", "слов")}, сегодня отвечено ${done}.`;
+  $("progInfo").textContent = `Изучается ${n} ${plural(n, "слово", "слова", "слов")}, сегодня отвечено ${done}` + (done ? `, верно ${Math.round(right / done * 100)}%.` : ".");
   $("ttsSwitch").classList.toggle("on", store.get("tts", true));
 }
 $("gear").onclick = () => { renderSettings(); $("settings").classList.remove("hidden"); el.answer.blur(); };
