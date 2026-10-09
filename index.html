@@ -73,8 +73,7 @@ input#answer:focus { border-color: var(--accent); }
 .feedback.ok { color: var(--ok); }
 .feedback.bad { color: var(--bad); }
 .feedback .you { display: block; font-weight: 400; font-size: 16px; color: var(--muted); margin-top: 2px; }
-.hint { text-align: center; font-size: 18px; line-height: 1.35; padding: 10px 14px; border-radius: 14px;
-  background: var(--soft); color: var(--ink); }
+.hint { text-align: center; font-size: 17px; line-height: 1.35; color: var(--muted); }
 .hintbtn { align-self: center; padding: 8px 16px; border-radius: 20px; background: transparent;
   border: 1px solid var(--line); color: var(--muted); font-size: 15px; }
 .example { text-align: center; font: italic 19px/1.35 ui-serif, "New York", Georgia, serif; color: var(--muted); }
@@ -128,7 +127,6 @@ input#answer:focus { border-color: var(--accent); }
     <div class="inner">
       <div class="tag" id="tag"></div>
       <div class="prompt"><span class="text" id="prompt"></span><button class="say hidden" id="sayPrompt" aria-label="Озвучить">🔊</button></div>
-      <div class="hint hidden" id="hint"></div>
       <div class="choices" id="choices"></div>
       <input id="answer" type="text" autocomplete="off" autocorrect="off" autocapitalize="none"
              spellcheck="false" enterkeyhint="go" lang="es" placeholder="по-испански…">
@@ -137,6 +135,7 @@ input#answer:focus { border-color: var(--accent); }
         <div class="feedback" id="feedback"></div>
       </div>
       <div class="example" id="example"></div>
+      <div class="hint hidden" id="hint"></div>
     </div>
   </div>
   <div class="actions" id="actions">
@@ -169,7 +168,7 @@ input#answer:focus { border-color: var(--accent); }
     <div class="row"><div><h3 style="margin:0">Озвучка</h3><div class="note">Кнопка 🔊 у испанского слова</div></div>
       <button class="switch" id="ttsSwitch" aria-label="Озвучка"></button></div>
   </div>
-  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 4</p>
+  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 5</p>
 </div>
 
 <script>
