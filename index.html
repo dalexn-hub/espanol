@@ -73,6 +73,10 @@ input#answer:focus { border-color: var(--accent); }
 .feedback.ok { color: var(--ok); }
 .feedback.bad { color: var(--bad); }
 .feedback .you { display: block; font-weight: 400; font-size: 16px; color: var(--muted); margin-top: 2px; }
+.hint { text-align: center; font-size: 18px; line-height: 1.35; padding: 10px 14px; border-radius: 14px;
+  background: var(--soft); color: var(--ink); }
+.hintbtn { align-self: center; padding: 8px 16px; border-radius: 20px; background: transparent;
+  border: 1px solid var(--line); color: var(--muted); font-size: 15px; }
 .example { text-align: center; font: italic 19px/1.35 ui-serif, "New York", Georgia, serif; color: var(--muted); }
 
 
@@ -124,9 +128,11 @@ input#answer:focus { border-color: var(--accent); }
     <div class="inner">
       <div class="tag" id="tag"></div>
       <div class="prompt"><span class="text" id="prompt"></span><button class="say hidden" id="sayPrompt" aria-label="Озвучить">🔊</button></div>
+      <div class="hint hidden" id="hint"></div>
       <div class="choices" id="choices"></div>
       <input id="answer" type="text" autocomplete="off" autocorrect="off" autocapitalize="none"
              spellcheck="false" enterkeyhint="go" lang="es" placeholder="по-испански…">
+      <button class="hintbtn hidden" id="btnHint">💡 Подсказка</button>
       <div>
         <div class="feedback" id="feedback"></div>
       </div>
@@ -163,7 +169,7 @@ input#answer:focus { border-color: var(--accent); }
     <div class="row"><div><h3 style="margin:0">Озвучка</h3><div class="note">Кнопка 🔊 у испанского слова</div></div>
       <button class="switch" id="ttsSwitch" aria-label="Озвучка"></button></div>
   </div>
-  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 3</p>
+  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 4</p>
 </div>
 
 <script>
@@ -221,7 +227,7 @@ function parseCSV(text) {
 }
 function looksSpanish(s) { return /[a-záéíóúüñ¿¡]/i.test(s); }
 function rowsFromCSV(text) {
-  let raw = parseCSV(text).map(r => [0, 1, 2].map(i => (r[i] || "").trim())).filter(r => r[0] && r[1]);
+  let raw = parseCSV(text).map(r => [0, 1, 2, 3].map(i => (r[i] || "").trim())).filter(r => r[0] && r[1]);
   if (raw.length && !looksSpanish(raw[0][0])) raw = raw.slice(1);   // заголовок
   const seen = new Set(), out = [];
   for (const r of raw) { if (seen.has(r[0])) continue; seen.add(r[0]); out.push(r); }  // повторы — молча первая строка
@@ -276,26 +282,26 @@ function buildSession() {
   const quota = Math.max(0, NEW_PER_DAY - newIntroducedToday());
   return shuffle(due.concat(fresh.slice(0, quota))).slice(0, MAX_SESSION);
 }
-function applyResult(es, correct, allowPromote) {
+function applyResult(es, correct, allowPromote, reschedule) {
   const st = prog[es] || { box: 1, correct: 0, wrong: 0 };
   if (correct) { st.correct += 1; if (allowPromote) st.box = Math.min(MAX_BOX, st.box + 1); }
   else { st.wrong += 1; st.box = 1; }
   st.last_seen = today();
-  if (allowPromote || !correct) st.next_due = addDays(INTERVALS[st.box]);
+  if (allowPromote || !correct || reschedule) st.next_due = addDays(INTERVALS[st.box]);
   prog[es] = st;
 }
 
 // ================= Состояние =================
 let rows = [], prog = {}, wordsFresh = false;
 let queue = [], total = 0, done = 0, right = 0;
-let answered = false, current = null, mode = "prod", lastCorrect = false, options = [];
+let answered = false, hintUsed = false, current = null, mode = "prod", lastCorrect = false, options = [];
 let extraRound = false, mistakes = [], shown = new Set(), sessionDay = today();
 
 const $ = id => document.getElementById(id);
 const el = {
   app: $("app"), counter: $("counter"), score: $("score"), barWrap: $("barWrap"), bar: $("bar"),
   card: $("card"), tag: $("tag"), prompt: $("prompt"), sayPrompt: $("sayPrompt"), choices: $("choices"),
-  answer: $("answer"), feedback: $("feedback"), example: $("example"),
+  answer: $("answer"), feedback: $("feedback"), example: $("example"), hint: $("hint"), btnHint: $("btnHint"),
   actions: $("actions"), btnIdk: $("btnIdk"), btnOk: $("btnOk"), btnMain: $("btnMain"), panel: $("panel"),
 };
 
@@ -322,6 +328,9 @@ function nextCard() {
 
   el.feedback.innerHTML = ""; el.feedback.className = "feedback";
   el.example.textContent = "";
+  hintUsed = false;
+  el.hint.classList.add("hidden"); el.hint.textContent = "";
+  el.btnHint.classList.toggle("hidden", !(current[3] && box > 1));
   el.btnOk.classList.add("hidden");
   el.btnIdk.classList.remove("hidden");
   el.btnMain.textContent = "Проверить";
@@ -378,6 +387,8 @@ function grade(correct, typed, allowOverride) {
   showFeedback(correct, typed);
   el.btnOk.classList.toggle("hidden", correct || !allowOverride);
   el.example.textContent = ex || "";
+  if (current[3]) { el.hint.textContent = current[3]; el.hint.classList.remove("hidden"); }
+  el.btnHint.classList.add("hidden");
   el.btnIdk.classList.add("hidden");
   el.btnMain.textContent = "Дальше"; el.btnMain.disabled = false;
 }
@@ -388,6 +399,7 @@ function showFeedback(correct, typed) {
   el.feedback.className = "feedback " + (correct ? "ok" : "bad");
   const box = document.createElement("div");
   box.textContent = (correct ? "✓  " : "✗  правильно: ") + answer;
+  if (correct && hintUsed) { const h = document.createElement("span"); h.className = "you"; h.textContent = "с подсказкой — коробка не меняется"; box.appendChild(h); }
   if (!correct && typed && typed.trim() && mode === "prod") {
     const y = document.createElement("span"); y.className = "you"; y.textContent = "вы: " + typed.trim(); box.appendChild(y);
   }
@@ -405,7 +417,7 @@ function override() {
 function commit() {
   const es = current[0];
   if (!prog[es]) countNewToday();
-  applyResult(es, lastCorrect, !extraRound);
+  applyResult(es, lastCorrect, !extraRound && !hintUsed, !extraRound && hintUsed);
   saveProgress();
   done += 1; shown.add(es);
   if (lastCorrect) { right += 1; mistakes = mistakes.filter(m => m[0] !== es); }
@@ -597,6 +609,13 @@ $("importFile").onchange = async (ev) => {
 for (const b of [el.btnMain, el.btnIdk, el.btnOk]) b.addEventListener("pointerdown", e => { if (document.activeElement === el.answer) e.preventDefault(); });
 el.btnMain.onclick = primary;
 el.btnIdk.onclick = dontKnow;
+el.btnHint.addEventListener("pointerdown", e => { if (document.activeElement === el.answer) e.preventDefault(); });
+el.btnHint.onclick = () => {
+  if (answered || !current || !current[3]) return;
+  hintUsed = true;
+  el.hint.textContent = current[3]; el.hint.classList.remove("hidden");
+  el.btnHint.classList.add("hidden");
+};
 el.btnOk.onclick = override;
 el.sayPrompt.onclick = () => current && speak(current[0]);
 el.answer.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); primary(); } });
