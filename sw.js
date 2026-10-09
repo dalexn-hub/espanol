@@ -3,7 +3,7 @@
 // без сети или при медленной сети (>3 c) — версия из кэша.
 // Словарь (Google Таблица) здесь не обрабатывается: его кэширует само приложение.
 
-const CACHE = "espanol-v5";
+const CACHE = "espanol-v6";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon.png"];
 
 self.addEventListener("install", (e) => {

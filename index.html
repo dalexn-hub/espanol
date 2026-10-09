@@ -168,7 +168,7 @@ input#answer:focus { border-color: var(--accent); }
     <div class="row"><div><h3 style="margin:0">Озвучка</h3><div class="note">Кнопка 🔊 у испанского слова</div></div>
       <button class="switch" id="ttsSwitch" aria-label="Озвучка"></button></div>
   </div>
-  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 5</p>
+  <p class="note" style="text-align:center;color:var(--muted);font-size:13px">версия 6</p>
 </div>
 
 <script>
@@ -398,7 +398,6 @@ function showFeedback(correct, typed) {
   el.feedback.className = "feedback " + (correct ? "ok" : "bad");
   const box = document.createElement("div");
   box.textContent = (correct ? "✓  " : "✗  правильно: ") + answer;
-  if (correct && hintUsed) { const h = document.createElement("span"); h.className = "you"; h.textContent = "с подсказкой — коробка не меняется"; box.appendChild(h); }
   if (!correct && typed && typed.trim() && mode === "prod") {
     const y = document.createElement("span"); y.className = "you"; y.textContent = "вы: " + typed.trim(); box.appendChild(y);
   }
